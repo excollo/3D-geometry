@@ -1,0 +1,12 @@
+# Camera information used when reliable video metadata is unavailable.
+# Add phone-specific entries only after verifying their camera values.
+
+default:
+  horizontal_field_of_view_degrees: 64.0
+
+phones: {}
+
+# Future entries should use this structure:
+# phones:
+#   "Example Phone Model":
+#     horizontal_field_of_view_degrees: 65.0

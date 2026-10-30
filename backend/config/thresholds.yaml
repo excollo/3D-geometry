@@ -1,0 +1,67 @@
+# Starting values for the 3D box checker.
+# These values must be tuned with labelled real-world videos.
+
+video:
+  maximum_duration_seconds: 12.0
+  sample_frames_per_second: 4.0
+  maximum_working_long_side_px: 1080
+  minimum_sampled_frames: 8
+
+preprocessing:
+  use_clahe: true
+  clahe_clip_limit: 2.0
+  clahe_grid_size: 8
+
+quality:
+  minimum_brightness: 35.0
+  maximum_brightness: 225.0
+  minimum_laplacian_variance: 60.0
+  minimum_usable_frame_fraction: 0.50
+  minimum_median_movement_px: 8.0
+
+roi:
+  # Fraction of the image retained around its centre.
+  width_fraction: 0.80
+  height_fraction: 0.80
+
+features:
+  detector: sift
+  maximum_features: 2000
+  minimum_features_per_frame: 40
+  minimum_matches_per_pair: 25
+  lowe_ratio: 0.75
+
+pairing:
+  minimum_gap_seconds: 0.60
+  maximum_gap_seconds: 1.50
+  maximum_pairs: 20
+
+geometry:
+  ransac_reprojection_threshold_px: 3.0
+  ransac_confidence: 0.995
+  ransac_max_iterations: 5000
+  minimum_homography_inliers: 20
+  minimum_fundamental_inliers: 20
+  minimum_second_plane_inliers: 12
+  minimum_second_plane_normal_angle_degrees: 25.0
+  maximum_decomposition_rotation_difference: 0.15
+  maximum_decomposition_translation_direction_difference: 0.35
+  minimum_plane_hull_area_px2: 100.0
+  minimum_parallax_px: 2.5
+  minimum_parallax_points: 12
+  minimum_parallax_point_fraction: 0.15
+  box_corner_edge_tolerance_px: 20.0
+
+scoring:
+  gric_weight: 0.40
+  second_plane_weight: 0.35
+  parallax_weight: 0.25
+  three_d_score_threshold: 0.65
+  flat_score_threshold: 0.35
+  minimum_confidence: 0.60
+  minimum_pairs_for_full_confidence: 3
+  confidence_mad_scale: 2.0
+
+debug:
+  enabled: true
+  maximum_annotated_pairs: 5

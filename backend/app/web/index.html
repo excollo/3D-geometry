@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>3D Box Checker</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #f5f7fb;
+      --muted: #a9b2c3;
+      --panel: rgba(18, 24, 38, 0.86);
+      --panel-solid: #121826;
+      --line: rgba(255, 255, 255, 0.11);
+      --accent: #6ee7c7;
+      --accent-deep: #0d8d75;
+      --three-d: #59d9a9;
+      --flat: #ffbd66;
+      --insufficient: #77a7ff;
+      --review: #d796ff;
+      --danger: #ff7d8e;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 15% 0%, rgba(26, 169, 142, 0.18), transparent 34rem),
+        radial-gradient(circle at 100% 25%, rgba(84, 113, 255, 0.13), transparent 30rem),
+        #080c14;
+    }
+
+    .shell {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 48px 0 72px;
+    }
+
+    header { margin-bottom: 28px; }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 760px;
+      font-size: clamp(2.25rem, 7vw, 5.25rem);
+      line-height: 0.96;
+      letter-spacing: -0.06em;
+    }
+
+    .intro {
+      max-width: 650px;
+      margin: 20px 0 0;
+      color: var(--muted);
+      font-size: 1.05rem;
+      line-height: 1.65;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(280px, 0.78fr) minmax(0, 1.22fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: var(--panel);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.24);
+      backdrop-filter: blur(16px);
+    }
+
+    .form-panel { padding: 24px; }
+
+    h2 {
+      margin: 0 0 8px;
+      font-size: 1.2rem;
+      letter-spacing: -0.02em;
+    }
+
+    .hint {
+      margin: 0 0 22px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .field { margin-bottom: 17px; }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      color: #dce2ed;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    input, select, button {
+      width: 100%;
+      min-height: 46px;
+      border-radius: 12px;
+      font: inherit;
+    }
+
+    input, select {
+      border: 1px solid var(--line);
+      padding: 10px 12px;
+      color: var(--ink);
+      background: rgba(5, 9, 16, 0.65);
+      outline: none;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(110, 231, 199, 0.13);
+    }
+
+    input[type="file"] {
+      padding: 8px;
+      cursor: pointer;
+    }
+
+    input[type="file"]::file-selector-button {
+      margin-right: 10px;
+      border: 0;
+      border-radius: 8px;
+      padding: 7px 10px;
+      color: #06130f;
+      background: var(--accent);
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    button {
+      border: 0;
+      margin-top: 5px;
+      padding: 12px 16px;
+      color: #06130f;
+      background: linear-gradient(135deg, var(--accent), #8bf0b7);
+      font-weight: 900;
+      cursor: pointer;
+      transition: transform 150ms ease, opacity 150ms ease;
+    }
+
+    button:hover:not(:disabled) { transform: translateY(-1px); }
+    button:disabled { cursor: wait; opacity: 0.58; }
+
+    .status {
+      min-height: 24px;
+      margin: 14px 0 0;
+      color: var(--muted);
+      font-size: 0.87rem;
+      line-height: 1.45;
+    }
+
+    .status.error { color: var(--danger); }
+
+    .result-panel {
+      min-height: 390px;
+      padding: 26px;
+    }
+
+    .empty {
+      min-height: 335px;
+      display: grid;
+      place-items: center;
+      border: 1px dashed var(--line);
+      border-radius: 16px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .result[hidden], .empty[hidden] { display: none; }
+
+    .verdict-row {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .verdict {
+      display: inline-flex;
+      align-items: center;
+      min-height: 36px;
+      border: 1px solid currentColor;
+      border-radius: 999px;
+      padding: 7px 13px;
+      font-size: 0.82rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .verdict[data-verdict="3d"] { color: var(--three-d); }
+    .verdict[data-verdict="flat"] { color: var(--flat); }
+    .verdict[data-verdict="insufficient"] { color: var(--insufficient); }
+    .verdict[data-verdict="review"] { color: var(--review); }
+
+    .analysis-id {
+      overflow: hidden;
+      color: var(--muted);
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 0.72rem;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .reason {
+      margin: 0 0 22px;
+      font-size: 1.12rem;
+      line-height: 1.55;
+    }
+
+    .score-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .score-card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      background: rgba(5, 9, 16, 0.45);
+    }
+
+    .score-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .score-card strong {
+      display: block;
+      margin-top: 5px;
+      font-size: 1.65rem;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--line);
+    }
+
+    .metric {
+      min-width: 0;
+      padding: 12px;
+      background: var(--panel-solid);
+    }
+
+    .metric dt {
+      overflow: hidden;
+      margin: 0 0 4px;
+      color: var(--muted);
+      font-size: 0.7rem;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .metric dd { margin: 0; font-weight: 800; }
+
+    .debug-section { margin-top: 26px; }
+
+    .debug-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .debug-grid img {
+      display: block;
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #050810;
+    }
+
+    @media (max-width: 800px) {
+      .shell { padding-top: 30px; }
+      .layout { grid-template-columns: 1fr; }
+      .result-panel { min-height: auto; }
+      .empty { min-height: 220px; }
+    }
+
+    @media (max-width: 520px) {
+      .shell { width: min(100% - 20px, 1120px); }
+      .form-panel, .result-panel { padding: 18px; border-radius: 17px; }
+      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .debug-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <p class="eyebrow">Local verification tool</p>
+      <h1>Is it really a box?</h1>
+      <p class="intro">Upload a short walk-around video. The checker compares motion across frames to decide whether it sees a physical 3D object or a flat representation.</p>
+    </header>
+
+    <div class="layout">
+      <section class="panel form-panel" aria-labelledby="upload-title">
+        <h2 id="upload-title">Analyze a recording</h2>
+        <p class="hint">Use an MP4 or MOV up to 12 seconds. Keep the printed side and label visible while moving around the box.</p>
+
+        <form id="analysis-form">
+          <div class="field">
+            <label for="video">Video</label>
+            <input id="video" name="video" type="file" accept=".mp4,.mov,video/mp4,video/quicktime" required>
+          </div>
+
+          <div class="field">
+            <label for="label">Known label <span aria-hidden="true">·</span> optional</label>
+            <select id="label" name="label">
+              <option value="">Unlabelled</option>
+              <option value="real">Real box</option>
+              <option value="flat_printout">Flat printout</option>
+              <option value="folded_printout">Folded printout</option>
+              <option value="screen">Screen</option>
+              <option value="bad_recording">Bad recording</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="phone-model">Phone model <span aria-hidden="true">·</span> optional</label>
+            <input id="phone-model" name="phone_model" type="text" placeholder="e.g. Pixel 7a" autocomplete="off">
+          </div>
+
+          <div class="field">
+            <label for="attempt">Attempt</label>
+            <input id="attempt" name="attempt" type="number" min="1" step="1" value="1" required>
+          </div>
+
+          <button id="submit-button" type="submit">Analyze video</button>
+          <p id="status" class="status" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section class="panel result-panel" aria-labelledby="result-title">
+        <h2 id="result-title">Result</h2>
+        <div id="empty-result" class="empty">Your verdict, measurements, and annotated frames will appear here.</div>
+
+        <div id="result" class="result" hidden>
+          <div class="verdict-row">
+            <span id="verdict" class="verdict"></span>
+            <span id="analysis-id" class="analysis-id"></span>
+          </div>
+          <p id="reason" class="reason"></p>
+
+          <div class="score-grid">
+            <div class="score-card"><span>Score</span><strong id="score"></strong></div>
+            <div class="score-card"><span>Confidence</span><strong id="confidence"></strong></div>
+          </div>
+
+          <h2>Measurements</h2>
+          <dl id="metrics" class="metrics"></dl>
+
+          <section id="debug-section" class="debug-section" hidden>
+            <h2>Annotated frames</h2>
+            <p class="hint">Feature matches and detected planes used by the checker.</p>
+            <div id="debug-grid" class="debug-grid"></div>
+          </section>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const form = document.querySelector("#analysis-form");
+    const submitButton = document.querySelector("#submit-button");
+    const status = document.querySelector("#status");
+    const emptyResult = document.querySelector("#empty-result");
+    const result = document.querySelector("#result");
+    const verdict = document.querySelector("#verdict");
+    const analysisId = document.querySelector("#analysis-id");
+    const reason = document.querySelector("#reason");
+    const score = document.querySelector("#score");
+    const confidence = document.querySelector("#confidence");
+    const metrics = document.querySelector("#metrics");
+    const debugSection = document.querySelector("#debug-section");
+    const debugGrid = document.querySelector("#debug-grid");
+
+    const metricLabels = {
+      frames_sampled: "Frames sampled",
+      frames_used: "Frames used",
+      pairs_used: "Pairs used",
+      median_matches: "Median matches",
+      median_movement_px: "Movement (px)",
+      median_h_inlier_ratio: "H inlier ratio",
+      median_f_inlier_ratio: "F inlier ratio",
+      second_plane_pair_fraction: "Second plane fraction",
+      median_parallax_px: "Parallax (px)",
+      median_brightness: "Brightness",
+      median_blur: "Blur score"
+    };
+
+    function formatNumber(value) {
+      if (typeof value !== "number") return String(value);
+      return Number.isInteger(value) ? String(value) : value.toFixed(2);
+    }
+
+    function setBusy(isBusy) {
+      submitButton.disabled = isBusy;
+      submitButton.textContent = isBusy ? "Analyzing…" : "Analyze video";
+      form.setAttribute("aria-busy", String(isBusy));
+    }
+
+    function showResult(data) {
+      emptyResult.hidden = true;
+      result.hidden = false;
+      verdict.textContent = data.verdict === "3d" ? "3D" : data.verdict;
+      verdict.dataset.verdict = data.verdict;
+      analysisId.textContent = data.id;
+      analysisId.title = data.id;
+      reason.textContent = data.reason;
+      score.textContent = data.score.toFixed(2);
+      confidence.textContent = data.confidence.toFixed(2);
+
+      metrics.replaceChildren();
+      Object.entries(data.metrics).forEach(([key, value]) => {
+        const item = document.createElement("div");
+        item.className = "metric";
+        const name = document.createElement("dt");
+        name.textContent = metricLabels[key] || key.replaceAll("_", " ");
+        name.title = name.textContent;
+        const measurement = document.createElement("dd");
+        measurement.textContent = formatNumber(value);
+        item.append(name, measurement);
+        metrics.append(item);
+      });
+
+      debugGrid.replaceChildren();
+      data.debug_frames.forEach((url, index) => {
+        const image = document.createElement("img");
+        image.src = url;
+        image.alt = `Annotated analysis frame ${index + 1}`;
+        image.loading = "lazy";
+        debugGrid.append(image);
+      });
+      debugSection.hidden = data.debug_frames.length === 0;
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      status.classList.remove("error");
+      status.textContent = "Uploading and checking the video. This may take a few seconds…";
+      setBusy(true);
+
+      const formData = new FormData();
+      const video = document.querySelector("#video").files[0];
+      const label = document.querySelector("#label").value;
+      const phoneModel = document.querySelector("#phone-model").value.trim();
+      const attempt = document.querySelector("#attempt").value;
+      formData.append("video", video);
+      formData.append("attempt", attempt);
+      if (label) formData.append("label", label);
+      if (phoneModel) formData.append("phone_model", phoneModel);
+
+      try {
+        const response = await fetch("/api/v1/analyze", {
+          method: "POST",
+          body: formData
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.detail || "Analysis failed.");
+        showResult(data);
+        status.textContent = "Analysis complete.";
+      } catch (error) {
+        status.classList.add("error");
+        status.textContent = error instanceof Error ? error.message : "Analysis failed.";
+      } finally {
+        setBusy(false);
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "3d-box-checker"
+version = "0.1.0"
+description = "Proof-of-concept checker for distinguishing a physical 3D box from a flat image."
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi",
+    "numpy",
+    "opencv-contrib-python-headless",
+    "python-multipart",
+    "PyYAML",
+    "uvicorn",
+]
+
+[project.optional-dependencies]
+dev = [
+    "httpx",
+    "pytest",
+]
+
+[project.scripts]
+boxcheck = "boxcheck.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*", "boxcheck*"]
+
+[tool.setuptools.package-data]
+app = ["web/*.html"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
